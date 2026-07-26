@@ -9,4 +9,12 @@
     <Project Path="tests/Underclass.Api.Tests/Underclass.Api.Tests.csproj" />
     <Project Path="tests/Underclass.Domain.Tests/Underclass.Domain.Tests.csproj" />
   </Folder>
+  <Folder Name="/client/">
+    <!--
+      The Godot client builds with the solution on purpose. It shares Underclass.Contracts rather than copying the
+      payload shapes, so a change to a response the client renders breaks this build instead of being found by
+      walking the Town.
+    -->
+    <Project Path="client/godot/Underclass.Client.csproj" />
+  </Folder>
 </Solution>

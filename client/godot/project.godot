@@ -1,0 +1,25 @@
+; Engine configuration file.
+;
+; The Town is built entirely from primitives in code — see Scripts/Town/TownScene.cs — so there are no imported
+; assets, no tilesets and no scene tree to keep in sync here. Main.tscn is a single node with a script on it.
+;
+; Input actions are registered in code as well (Scripts/Actions.cs), so that the bindings live next to the
+; movement they drive instead of in a serialised resource nobody reads.
+
+config_version=5
+
+[application]
+
+config/name="Project Underclass"
+config/description="Thin end-to-end prototype: craft Gear, send an Explorer out, find out whether they come back."
+run/main_scene="res://Main.tscn"
+config/features=PackedStringArray("4.7", "C#")
+
+[display]
+
+window/size/viewport_width=1600
+window/size/viewport_height=900
+
+[dotnet]
+
+project/assembly_name="Underclass.Client"

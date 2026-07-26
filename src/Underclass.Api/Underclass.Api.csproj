@@ -6,6 +6,10 @@
     <ProjectReference Include="..\Underclass.Contracts\Underclass.Contracts.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="mvdmio.ASP.Jobs" Version="4.6.0" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>

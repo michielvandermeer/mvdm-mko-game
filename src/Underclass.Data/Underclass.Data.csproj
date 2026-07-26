@@ -4,6 +4,10 @@
     <ProjectReference Include="..\Underclass.Domain\Underclass.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="mvdmio.Database.PgSQL" Version="0.30.0" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

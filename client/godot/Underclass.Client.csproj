@@ -1,0 +1,20 @@
+<Project Sdk="Godot.NET.Sdk/4.7.1">
+
+  <PropertyGroup>
+    <!-- net8.0 is what Godot 4.x documents as its requirement, and what Underclass.Contracts targets. -->
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Underclass.Client</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      The wire contracts, shared rather than copied. Underclass.Contracts references nothing of the domain, so
+      this brings the shape of the payloads over without bringing a single game rule with it — and a change to a
+      response the client renders breaks this build rather than being discovered by hand.
+    -->
+    <ProjectReference Include="..\..\src\Underclass.Contracts\Underclass.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

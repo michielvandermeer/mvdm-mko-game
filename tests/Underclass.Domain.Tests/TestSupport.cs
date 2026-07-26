@@ -72,4 +72,37 @@ internal static class TestTown
 
       return craft.Value;
    }
+
+   /// <summary>Sends an Explorer out, asserting the dispatch succeeded.</summary>
+   public static ExpeditionState SendTo(this Town town, ExplorerId explorer, AreaId area, int depth)
+   {
+      var dispatch = town.Dispatch(explorer, area, depth);
+      Assert.True(dispatch.Ok, $"dispatch was rejected: {dispatch.Reason}");
+
+      return dispatch.Value;
+   }
+
+   /// <summary>
+   ///    Everything about a Town a player could observe, flattened into one comparable string. Lets a test
+   ///    assert that two reads describe the same Town without asserting on how the Town is built — the
+   ///    server's clock is left out, since it moves whether or not the Town does.
+   /// </summary>
+   public static string Fingerprint(this TownSnapshot snapshot)
+   {
+      var materials = snapshot.Materials.OrderBy(entry => entry.Key).Select(entry => $"{entry.Key}={entry.Value}");
+      var gear = snapshot.Gear.OrderBy(g => g.Id.Value).Select(g => $"{g.Id}:{g.Material}:{g.Power}");
+      var explorers = snapshot.Explorers.Select(e => $"{e.Name}:{e.Status}:{e.EquippedGear}");
+      var expeditions = snapshot.Expeditions.Select(e => $"{e.Id}:{e.Area}:{e.Depth}:{e.CompletesAt:O}");
+      var reports = snapshot.Reports.Select(r => $"{r.Id}:{r.Survived}:{r.Gold}:{r.ResolvedAt:O}");
+
+      return string.Join(
+         " | ",
+         $"gold={snapshot.Gold}",
+         string.Join(",", materials),
+         string.Join(",", gear),
+         string.Join(",", explorers),
+         string.Join(",", expeditions),
+         string.Join(",", reports)
+      );
+   }
 }
