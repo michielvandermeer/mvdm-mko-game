@@ -1,0 +1,28 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+TestResults/
+*.trx
+.vs/
+.idea/
+
+# Godot 4
+.godot/
+client/godot/android/
+client/godot/export_presets.cfg
+*.translation
+
+# Godot C# build output
+client/godot/bin/
+client/godot/obj/
+client/godot/.mono/
+
+# Local overrides
+*.local.json
+appsettings.Development.local.json
+.env

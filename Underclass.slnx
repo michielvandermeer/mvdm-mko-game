@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Underclass.Api/Underclass.Api.csproj" />
+    <Project Path="src/Underclass.Contracts/Underclass.Contracts.csproj" />
+    <Project Path="src/Underclass.Data/Underclass.Data.csproj" />
+    <Project Path="src/Underclass.Domain/Underclass.Domain.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Underclass.Api.Tests/Underclass.Api.Tests.csproj" />
+    <Project Path="tests/Underclass.Domain.Tests/Underclass.Domain.Tests.csproj" />
+  </Folder>
+</Solution>
