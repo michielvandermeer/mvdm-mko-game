@@ -1,95 +1,66 @@
 # Coding Standards
 
-## Language
+## Done When
 
-- Write the glossary's terms capitalised as [`CONTEXT.md`](CONTEXT.md) writes them, in identifiers, test names,
-  comments and player-facing strings alike. Treat a concept it lacks as invented language to rename, or as a glossary
-  gap to flag to the user.
-- Write British English in prose and identifiers (`Catalogue`, `serialise`, `Centred`); framework names keep their own
-  spelling (`Color`, `JsonSerializer`).
+- `dotnet build Underclass.slnx` and `dotnet test Underclass.slnx` pass with Docker running (Testcontainers),
+  warning-free except NU1903 on Testcontainers' SSH.NET.
+- A `client/godot/` change goes to the user to walk through by hand, per the client README's _Playing it_: the build
+  compiles the client, and nothing runs it.
 
-## Formatting
+## Style
 
-- Indent with 3 spaces and format by hand, touching only the lines you change: with no `.editorconfig`, `dotnet format`
-  reindents whole files to 4 spaces.
+- Name domain concepts with [`CONTEXT.md`](CONTEXT.md)'s terms, capitalised as it writes them, in identifiers, tests,
+  comments and player-facing strings: its _Avoid_ lists name the synonyms that creep in. Rename a concept it lacks, or
+  flag it to the user as a glossary gap.
+- Spell in British English, in prose and identifiers (`Catalogue`, `serialise`, `Centred`); framework names keep
+  their own (`Color`, `JsonSerializer`).
+- Comment the why — the reason for a number, the invariant a line protects, the story it serves: the code says what.
+- Indent 3 spaces and format by hand, touching only the lines you change: with no `.editorconfig`, `dotnet format`
+  reindents whole files to 4. Lay out XML docs as `src/` does; `ScriptedRandom` in `TestSupport.cs` is the outlier.
 
-## Comments and docs
+## Decisions
 
-- Spend comments on why: the reason for a number, the invariant a line protects, the story it serves. Cite stories by
-  number ("Story 17"), ADRs by path, and spec sections by name.
-- Document a type or member whose name leaves out what it guarantees or why, and give every parameter of a public
-  positional record a `<param>`; self-describing ones (`Accepted`, `ToContract`, row records, test classes) go bare.
-- Lay out XML docs as `src/` does; `ScriptedRandom` in `TestSupport.cs` is an outlier, not a second style.
+Working against an ADR is the user's call: name it and ask.
 
-## Lockstep
-
-Change each of these together, in one commit:
-
-- a port or launch command, and every file naming it, the client README's _Running it_, `.agents/refs/stack.md` and
-  the client's `GameApi.BaseUrl` among them;
-- `Actions.Register` and the client README's key table;
-- the `Godot.NET.Sdk` version in `Underclass.Client.csproj` and the Godot editor version the client README names;
-- the Postgres image in `docker-compose.yml` and the API suite's `PostgreSqlBuilder`: the suite proves the wiring
-  against the image the stack runs.
-
-## Server authority
-
-- Keep every rule, roll, outcome and estimate in `Underclass.Domain`, on the server, and send the client each number it
-  shows, as `GET /api/crafting/options` was added for the Workshop:
+- Keep every rule, roll, outcome and estimate in `Underclass.Domain`, with time and chance only from the injected
+  `TimeProvider` and `IRandomSource`, and send the client each number it shows: **server authority**,
   [ADR 0002](docs/adr/0002-server-authoritative-from-day-one.md).
-- Read time only from the injected `TimeProvider` and chance only from the injected `IRandomSource`: that is what lets
-  a test fast-forward an Expedition and pin its outcome.
-- Grey a client control only from server-supplied numbers, as an affordance; the server's refusal stays the answer.
-  Render a duration against `TownResponse.ServerTime` plus the local time elapsed since that snapshot arrived.
-
-## Time
-
-- Settle a continuous quantity on read, from a stored `last_settled_at`, and book a discrete event as a job through
-  `IJobScheduler.PerformAtAsync`, as `TownService.DispatchAsync` does:
+- Settle a continuous quantity on read from its `last_settled_at`, idempotent and blind to when anyone looks, and book
+  a discrete event as a job through `IJobScheduler.PerformAtAsync`: **event-driven time**,
   [ADR 0003](docs/adr/0003-scheduled-events-and-lazy-accrual-instead-of-a-tick-loop.md).
-- Keep settling idempotent and blind to when anyone looks: a player who looks late, or often, gets what one who watched
-  gets, and a job that never runs only delays the news.
-- Reach the Town through `TownService`, for reads as for commands: a read settles the Town, and `TownService` saves what
-  settling changed.
+- Take Gear out of the economy only with the death of the Explorer carrying it: **permadeath sink**,
+  [ADR 0001](docs/adr/0001-permadeath-is-the-only-gear-sink.md).
+- Re-read the `EconomyCurveTests` curve after adding or reordering a roll: every later roll of its seeded run shifts.
+  When it goes red, re-tune `Catalogue` or tell the user the loop stopped cohering.
 
-## Economy
+## Layers
 
-- Take Gear out of the economy only through the death of the Explorer carrying it, keeping the dead Explorer's row with
-  status `Dead`: [ADR 0001](docs/adr/0001-permadeath-is-the-only-gear-sink.md).
-- Read a red `EconomyCurveTests` as news about the loop: re-tune `Catalogue`, or tell the user the loop stopped
-  cohering. Print its curve with
-  `dotnet test tests/Underclass.Domain.Tests --filter "FullyQualifiedName~EconomyCurveTests" --logger "console;verbosity=detailed"`.
-- Re-read that curve after adding or reordering a roll: every later roll of a seeded run shifts.
-
-## Domain
-
+- Before adding a player action → [`.agents/refs/player-action.md`](.agents/refs/player-action.md).
 - Call `MarkChanged()` with every mutation in `Town`: `TownService` saves only a Town whose `HasChanges` is set, the
-  domain suite never persists, and accrual settling in the same request hides a forgotten call intermittently.
-- Build `Underclass.Domain` on the BCL alone, keeping ASP.NET, the database, Godot and I/O outside it: that is what lets
-  the domain suite play the whole loop at unit speed.
-
-## Refusals
-
-- Refuse a player's request with `CommandResult.Rejected(RejectionReason.X)`, and throw only for a broken invariant
-  (`InvalidOperationException` naming the ids involved) or an enum value with no definition
-  (`ArgumentOutOfRangeException`): a refusal is an ordinary answer, which the API sends as a 400 `RejectionResponse`.
-- Word each `RejectionReason` as a whole sentence in its own arm of `Rejections.Describe`: the client shows that
-  sentence as-is, and the `_` arm tells the player only "That cannot be done."
+  domain suite never persists, and accrual settling in the same request often sets the flag anyway.
+- Word each `RejectionReason` as a whole sentence in its own arm of `Rejections.Describe`: the client shows it as-is,
+  and the `_` arm says only "That cannot be done."
+- Give a contract record its helpers through an extension class, as `ExplorerStatuses` does: a computed property
+  would serialise into the payload.
 
 ## Persistence
 
 - Change the schema with a new migration: `schema.sql` is applied only to an empty database, so an edit there alone
   misses every existing one (the compose volume), and the API suite's fresh database hides the gap.
+- Name the migration class `_<yyyyMMddHHmm>_<Name>`, an `IDbMigration` in `Underclass.Data`: the runner reads the
+  stamp from the name and runs only stamps past the last one applied.
+- Add a table holding part of a Town to `TownRepository.DeletionOrder` and to `TruncateTown` in
+  `tests/Underclass.Api.Tests/UnderclassApi.cs`: a save empties the Town's rows through the one, and each API test
+  through the other.
+- Raise `schema.sql`'s `-- Migration version:` header to the last migration folded into it: a fresh database
+  otherwise runs that migration again.
 
-## Contracts
+## Lockstep
 
-- Keep `Underclass.Contracts` self-contained: positional records of plain data, with readers' predicates in extension
-  classes like `ExplorerStatuses`. The Godot client compiles this project, so a project reference would carry rules to
-  it, and a computed property would serialise into the payload.
+Change each group in one commit: no build checks them.
 
-## Tests
-
-- Cover a rule in `Underclass.Domain.Tests` and wiring (HTTP, Postgres, jobs, restarts) in `Underclass.Api.Tests`,
-  which leaves the numbers to the domain suite.
-- Assert on what a player could observe — the `CommandResult`, `Snapshot()` and `Fingerprint()` in the domain suite,
-  HTTP responses in the API suite — and that a refused command changed nothing.
+- a port or launch command, and every file naming it, the client README's _Running it_ and `GameApi.BaseUrl` among
+  them;
+- `Actions.Register` and the client README's key table;
+- the `Godot.NET.Sdk` version in `Underclass.Client.csproj` and the Godot editor version the client README names;
+- the Postgres image in `docker-compose.yml` and the API suite's `PostgreSqlBuilder`.
